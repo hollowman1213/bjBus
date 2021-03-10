@@ -1,0 +1,24 @@
+1、框架结构
+    5+2 结构
+                                                spiders：用户编写（配置），框架入口
+
+                                 item/requests||     |  ||①
+                                            ⑦||    ||  ||requests
+
+                                                middleware：中间件
+
+                                            response||  ||
+                                              |   ⑥||   |
+
+         item pipelines(出口)  <=== Items ====     engine     <===== response | request ======>   downloader
+
+           （用户编写）                        ||    ||                    middleware
+                                             || == ||
+                                                   ||
+                                                   ||
+                                                   ||request
+                                                   ||
+                                                   ||
+                                                   ||
+
+                                                scheduler

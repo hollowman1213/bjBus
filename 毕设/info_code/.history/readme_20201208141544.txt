@@ -1,0 +1,27 @@
+1. 进入bjbus.com爬取通知公告；
+    - 通知公告组织形式：< ..... > ，中间每个点是一个列表，每个列表下三个新闻；每个点为一个<li>；每个 > 是一个class = next-btn的<a></a>标签；
+    - <div class = "news_cont">
+        <div class = "item">
+            <div class = "item_cont"> 
+                // news block show now 
+                <ul class = "list" style = "display: block">
+                    // each li represent a news
+                    <li>
+                        <p class = "title">
+                            <a hrep = "link of news" > title </a>
+                        </p>
+                        <div> display text </div> 
+                    </li>
+                </ul>
+                // news block not show now
+                <ul class = "list hide" style = "display:none">
+                    // each li represent a news
+                    <li>
+                        <p class = "title">
+                            <a hrep = "link of news" > title </a>
+                        </p>
+                        <div> display text </div> 
+                    </li>
+                </ul>
+    
+

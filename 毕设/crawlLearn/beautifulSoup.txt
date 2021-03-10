@@ -1,0 +1,37 @@
+常见小tips：
+1、碰见无法连接的错误时，可以是服务器对python爬虫做了限制，这时候可以将headers = {'User-Agent':'Mozilla/5.0'}伪装为浏览器访问
+2、requests的几个方法，只有get和head是从服务器获取数据，post等都是向服务器发送数据
+3、url要加http:// or https://
+4、网页编码可能没有默认设置，乱码时需要r.encoding = r.apparent_encoding
+5、使用request库的模板
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        r.encoding = r.apparent_encoding
+        print(r.text/r.status/r.encoding...)
+    except:
+        print('爬取失败')
+6、使用bs4的模板
+    soup = BeautifulSoup(r.text)
+    soup.prettify()
+
+7、爬取的网站需要登录的情况：
+    （1）首次在浏览器中登录时，进入浏览器调试模式，并查看network模块，点击其中的html文件等，找到请求头中的cookie；
+        将该cookie设置为requests的headers参数；
+    （2）表单请求大法，通过抓包获取请求登录的时候需要用到的用户名密码参数，然后以表单的形式请求服务器；
+        使用urllib库
+    （3）Selenium 自动登录法
+
+8、爬取数据网站的选取原则：
+    数据信息静态存在于html页面中，非js代码生成，没有Robots协议限制
+
+9、beautifulsoup的使用：https://cuiqingcai.com/1319.html
+
+10、当一个标签下有很多子标签时，soup.tag.string没办法确认应该返回哪个标签下的string，因此会返回none
+   .string可以返回当前节点中的内容，但是当前节点包含子节点时，.string不知道要获取哪一个节点中的内容，故返回空
+   .text（或者.get_text()）可以返回当前节点所包含的所有文本内容，包括当前节点的子孙节点
+
+
+
+
+
