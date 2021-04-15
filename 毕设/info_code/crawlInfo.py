@@ -43,17 +43,23 @@ def crawlDetailPage(links):
     totArticle = []
     changeInfoTitle = []
     changeInfoArticle = []
+    totTime = []
+    changeInfoTime = []
     for i in range(l):
         try:
             r = requests.get(rootUrl + links[i],headers = {'User-Agent':'Mozilla/5.0'})
             r.raise_for_status()
             r.encoding = r.apparent_encoding
             soup = BeautifulSoup(r.text,'html.parser')
-            title = ''
             title = soup.find('h1',class_= 'title')
             title = str(title.string)
             articleCont = soup.find('div',class_='article_cont')
             article = ''
+            releaseTime = soup.select('div[class="article_info"] span')
+            releaseTime = releaseTime[0]
+            releaseTime = str(releaseTime.string)
+            releaseTime = releaseTime[5:]
+            # print(releaseTime)
             for child in articleCont.children:
                 if isinstance(child, bs4.element.Tag):
                     article += str(child.text)
@@ -61,19 +67,14 @@ def crawlDetailPage(links):
                 print(title)
                 totTitle.append(title)
                 totArticle.append(article)
-                if '临时' in title or '降雨影响' in title:
-                    continue
-                if ('路' in title or '线' in title or '站' in title) and \
-                        ('停' in title or '增' in title or '新开' in title or '调整' in title or '撤销' in title or '取消' in title):
-                    pass
-                else:
-                    continue
-                changeInfoArticle.append(article)
-                changeInfoTitle.append(title)
-
+                totTime.append(releaseTime)
+                if ('临时' not in title and '降雨影响' not in title) and ('路' in title or '线' in title or '站' in title) and ('停' in title or '增' in title or '新开' in title or '调整' in title or '撤销' in title or '取消' in title):
+                    changeInfoArticle.append(article)
+                    changeInfoTitle.append(title)
+                    changeInfoTime.append(releaseTime)
         except:
             continue
-        return totTitle,totArticle,changeInfoTitle,changeInfoArticle
+    return (totTitle,totArticle,totTime,changeInfoTitle,changeInfoArticle,changeInfoTime)
 
 
 def printNotice(rideNotice):
@@ -90,19 +91,41 @@ if __name__ == '__main__':
     # totPage = input("请输入通告页数：")
     # totPage = int(totPage)
     totPage = 220
-    for i in range(totPage):
+    totTitle = []
+    totArticle = []
+    totTime = []
+    changeInfoTitle = []
+    changeInfoArticle = []
+    changeInfoTime = []
+    for i in range(1,totPage+1):
         curLink = []
         try:
             curLink = crawlNoticeLink(i)
         except:
             continue
+        # print(i,curLink)
         time.sleep(0.1)
         ret = crawlDetailPage(curLink)
-    totPdTitle = pd.Series(ret[0])
-    totPdArticle = pd.Series(ret[1])
-    changeInfoPdTitle = pd.Series(ret[2])
-    changeInfoPdArticle = pd.Series(ret[3])
-    totData = pd.DataFrame({'title':totPdTitle,'content':totPdArticle})
-    changeInfoData = pd.DataFrame({'title':changeInfoPdTitle,'content':changeInfoPdArticle})
+        totTitle.append(ret[0])
+        totArticle.append(ret[1])
+        totTime.append(ret[2])
+        changeInfoTitle.append(ret[3])
+        changeInfoArticle.append(ret[4])
+        changeInfoTime.append(ret[5])
+
+    totTitle = sum(totTitle,[])
+    totArticle = sum(totArticle,[])
+    totTime = sum(totTime,[])
+    changeInfoTitle = sum(changeInfoTitle,[])
+    changeInfoArticle = sum(changeInfoArticle,[])
+    changeInfoTime = sum(changeInfoTime,[])
+    totPdTitle = pd.Series(totTitle)
+    totPdArticle = pd.Series(totArticle)
+    totPdTime = pd.Series(totTime)
+    changeInfoPdTitle = pd.Series(changeInfoTitle)
+    changeInfoPdArticle = pd.Series(changeInfoArticle)
+    changeInfoPdTime = pd.Series(changeInfoTime)
+    totData = pd.DataFrame({'title':totPdTitle,'time':totPdTime,'content':totPdArticle})
+    changeInfoData = pd.DataFrame({'title':changeInfoPdTitle,'time':changeInfoPdTime,'content':changeInfoPdArticle})
     totData.to_csv('allInfo.csv')
     changeInfoData.to_csv('changeInfo.csv')

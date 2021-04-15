@@ -3,25 +3,45 @@
 	id = 'homepage'>
 		<v-main>
 			<v-card>
-				<v-card-title>
-					北京公交乘车公告
-				</v-card-title>
+				<v-toolbar
+				  color="#6BAAFE"
+				  dark
+				  flat>
+				<v-toolbar-title style="font-size: 28px;">北京公交乘车公告</v-toolbar-title>
 				
+				<v-spacer></v-spacer>
+				<v-btn text @click="updateBusRoute"><font color="white" size="4">更新公交路线</font></v-btn>
+				<v-btn text @click="updateNews"><font color="white" size="4">更新乘车公告</font></v-btn>
+				<template v-slot:extension>
 				<v-tabs 
 					background-color='#6BAAFE'
+					centered
+					fixed-tabs
 				>
-					<v-tab><font color="white">乘车公告</font></v-tab>
-					<v-tab><font color="white">更新日志</font></v-tab>
-					<v-card flat width="137" color="#ffffff">
+					<v-tabs-slider color="yellow"></v-tabs-slider>
+					<v-tab color="#6BAAFE" flat><font color="white" size="4">乘车公告</font></v-tab>
+					<v-tab color="#6BAAFE" flat><font color="white" size="4">更新日志</font></v-tab>
+					<v-card flat width="300" color="#ffffff">
 					    <v-select
 					        :items="busRouters"
 					        v-model="selectBus"
 							background-color="#6BAAFE"
 					        solo
 					        flat
-					        style="font-size: 14px;-webkit-text-fill-color:white;"
+					        style="text-align: center;font-size: 18px;-webkit-text-fill-color:white;"
 					    >
 					    </v-select>
+					</v-card>
+					<v-card flat width="300" color="#ffffff">
+						<v-select
+						    :items="reason"
+						    v-model="selectReason"
+							background-color="#6BAAFE"
+						    solo
+						    flat
+						    style="text-align: center;font-size: 18px;-webkit-text-fill-color:white;text-emphasis-style: initial;"
+						>
+						</v-select>
 					</v-card>
 					<v-tab-item>
 						<v-row
@@ -40,13 +60,13 @@
 								<v-card 
 									flat
 								>
-									<v-data-table
-										:headers="headers"
-										:items="notices"
-										:search="search"
-										style="white-space: pre-wrap;"
-									>
-									</v-data-table>
+										<v-data-table
+											:headers = "headers"
+											:items = "notices"
+											:rows-per-page-items="1"
+											height="630px"
+											>
+										</v-data-table>
 								</v-card>
 							</v-col>
 						</v-row>
@@ -61,6 +81,8 @@
 						</v-container>
 					</v-tab-item>
 				</v-tabs>
+				</template>
+				</v-toolbar>
 			</v-card>
 		</v-main>
 	</v-app>
@@ -75,35 +97,99 @@
 				return;
 			}
 			else{
+				var _self = this;
+				this.$store.commit('setRoute',{route:_self.selectBus});
 				this.$router.push('/detail');
 			}
 		}
 	},
-    data(){
+	beforeCreate() {
+		var date = new Date();
+		var year = date.getFullYear();
+		var month = date.getMonth();
+		var timeSelector = [];
+		var months = ['1月/January','2月/February','3月/March','4月/April','5月/May','6月/June','7月/July','8月/August','9月/September','10月/October','11月/November','12月/December'];
+		var curChild = [];
+		var id = 2;
+		while (id-2 <= month){
+			curChild.push({'id':id,'name':months[id-2]});
+			id ++;
+		}
+		var curYear = {
+			id:1,
+			name:year,
+			children:curChild
+		};
+		timeSelector.push(curYear);
+		var yearCnt = year-1;
+		while(yearCnt >= 2010){
+			curChild = [];
+			var monthCnt = 1;
+			var yearId = id;
+			id ++;
+			while(monthCnt <= 12){
+				curChild.push({'id':id,'name':months[monthCnt-1]});
+				id ++;
+				monthCnt ++;
+			}
+			curYear = {
+				id:yearId,
+				name:yearCnt,
+				children:curChild
+			};
+			timeSelector.push(curYear);
+			yearCnt --;
+		}
+		this.$store.commit('setTimeSelector',{'timeSelector':timeSelector});
+	},
+    mounted() {
+		var _self = this;
+    	this.$axios.get(
+						"/api/"
+						).then(
+							function(response){
+							 var data = response.data.ret;
+							 data = JSON.parse(data);
+							 _self.notices = data;
+						}).catch(function(err){
+							alert(err);
+						}); 
+
+    },
+	data(){
 		var _self = this;
 		return	{
 			search:'',
 			selectBus:'所有路线',
-			busRouters:[
-				'所有路线',
-				'一号线',
-				'二号线',
-				'三号线'
+			selectReason:'变更缘由',
+			busRouters:_self.$store.state.busRoutes.split(' '),
+			reason:[
+				'变更缘由',
+				'征集活动',
+				'公交新策',
+				'节假日',
+				'大型活动',
+				'高铁线路规划',
+				'地铁线路规划',
+				'站线规范撤销',
+				'配合路况调整',
+				'天气影响',
+				'政府部门调整要求',
+				'优化调整',
+				'调整营业时间'
 			],
 			headers:[
-				{text:'发布时间',align:'start',value:'time'},
-				{text:'标题',value:'title'},
-				{text:'调整时间',value:'adjustTime'},
-				{text:'调整原因',value:'adjustReason'},
-				{text:'修改路线、站点及方法',filterable: false,value:'adjustMethod'}
+				{text:'发布时间',align:'center',value:'time',width:125},
+				{text:'标题',value:'title',align:'center',width:200},
+				{text:'分类',value:'classification',align:'center',width:100},
+				{text:'修改路线、站点及方法',align:'center',filterable: false,value:'content'}
 			],
 			notices:[
 				{
 					time:'2021.01.12',
 					title:'标题',
-					adjustTime:'2021.01.16',
-					adjustReason:'天气',
-					adjustMethod:'一号线:\n\t一号站点：取消\n\t二号站点：新增'
+					classification:'天气',
+					content:'一号线:\n\t一号站点：取消\n\t二号站点：新增'
 				}
 			],
 			logHeaders:[
@@ -123,45 +209,22 @@
 					updateNum:'4',
 				}
 			],
-			timeSelector : [
-				{
-					id:1,
-					name:'2021',
-					children:[
-						{ id:2,name: '1月/January' },
-						{ id:3,name: '2月/February' },
-						{ id:4,name: '3月/March' },
-						{ id:5,name: '4月/April' },
-						{ id:6,name: '5月/May' },
-						{ id:7,name: '6月/June' },
-						{ id:8,name: '7月/July' },
-						{ id:9,name: '8月/August' },
-						{ id:10,name: '9月/September' },
-						{ id:11,name: '10月/October' },
-						{ id:12,name: '11月/November' },
-						{ id:13,name: '12月/December' },
-					]
-				},	
-				{
-					id:14,
-					name:'2020',
-					children:[
-						{ id:15,name: '1月/January' },
-						{ id:16,name: '2月/JFebruary' },
-						{ id:17,name: '3月/March' },
-						{ id:18,name: '4月/April' },
-						{ id:19,name: '5月/May' },
-						{ id:20,name: '6月/June' },
-						{ id:21,name: '7月/July' },
-						{ id:22,name: '8月/August' },
-						{ id:23,name: '9月/September' },
-						{ id:24,name: '10月/October' },
-						{ id:25,name: '11月/November' },
-						{ id:26,name: '12月/December' },
-					]
-				},
-			],
+			timeSelector : _self.$store.state.timeSelector,
 		}
+	},
+    methods:{
+		updateBusRoute(){
+			alert("1");
+		},
+		updateNews(){
+			alert("2");
+		},
 	}
   }
 </script>
+<style>
+	.v-data-table tr {
+	  height: 50px;
+	  overflow-y: hidden;
+	}
+</style>

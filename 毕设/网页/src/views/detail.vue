@@ -28,6 +28,8 @@
 									color="#6BAAFE"
 									class="mx-0"
 									outlined
+									@click = "viewMap"
+									dark
 								  >
 									查看路线图
 								  </v-btn>
@@ -56,6 +58,11 @@
 					route:'一号站点-二号站点'
 				}
 			]
+		}
+	},
+	methods:{
+		viewMap(){
+			this.$router.push('/map');
 		}
 	}
   }
